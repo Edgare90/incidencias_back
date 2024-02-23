@@ -4,11 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Hash;
 
 class Usuario extends Model
 {
     use HasFactory;
-    protected $table = 'users'; // Nombre de la tabla en la base de datos
+    protected $table = 'users';
+    protected $primaryKey = 'id_usuario';
 
     protected $fillable = [
         'id_usuario',
@@ -17,4 +19,24 @@ class Usuario extends Model
         'perfil',
         'estatus'
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($usuario) {
+            $usuario->password = Hash::make($usuario->password);
+        });
+
+        static::updating(function ($usuario) {
+            if ($usuario->isDirty('password')) {
+                $usuario->password = Hash::make($usuario->password);
+            }
+        });
+    }
+
+    public function Departamento()
+    {
+        return $this->hasOne(Departamentos::class);
+    }
 }

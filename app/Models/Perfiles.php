@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class Perfiles extends Model
 {
     use HasFactory;
-    protected $table = 'perfiles'; // Nombre de la tabla en la base de datos
+    protected $table = 'perfiles';
+    protected $primaryKey = 'id_perfil';
+    public $timestamps = false;
 
     protected $fillable = [
         'id_perfil',
