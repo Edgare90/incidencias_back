@@ -5,10 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
 class Usuario extends Model
 {
-    use HasFactory;
+    use HasFactory, Notifiable,HasApiTokens ;
     protected $table = 'users';
     protected $primaryKey = 'id_usuario';
 
@@ -17,7 +21,8 @@ class Usuario extends Model
         'usuario',
         'email',
         'perfil',
-        'estatus'
+        'estatus',
+        'password',
     ];
 
     protected static function boot()
@@ -37,6 +42,6 @@ class Usuario extends Model
 
     public function Departamento()
     {
-        return $this->hasOne(Departamentos::class);
+        return $this->hasOne(Departamentos::class, 'id_departamento');
     }
 }
