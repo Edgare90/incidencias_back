@@ -77,6 +77,18 @@ class TicketController extends Controller
         return $tickets;
     }
 
+    public function GetStatus()
+    {
+        $estatus = Estatus::all();
+
+        if ($estatus->isEmpty()) {
+            return response()->json(['message' => 'No se encontraron estatus.'], 404);
+        }
+    
+        return $estatus;
+    }
+     
+
 
     public function GetTicketId($id_ticket)
     {

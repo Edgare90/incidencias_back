@@ -30,6 +30,4 @@ use App\Http\Controllers\Auth\LoginController;
             Route::post('guarda-ticket',[TicketController::class,'GuardaTicket']);
             Route::get('obtiene-tickets-user/{id_usuario}', [TicketController::class,'GetTicketUser']);
             Route::get('obtiene-tickets-id/{id_ticket}',[TicketController::class,'GetTicketId']);
-
-
-
+            Route::get('obtiene-estatus',[TicketController::class,'GetStatus']);
