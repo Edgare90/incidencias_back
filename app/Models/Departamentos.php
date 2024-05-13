@@ -24,8 +24,8 @@ class Departamentos extends Model
         return $this->belongsTo(Usuario::class, 'id_departamento');
     }
 
-    public function ticketsDirigidos()
+    public function tickets()
     {
-        return $this->hasMany(Ticket::class, 'dirigido_a', 'id_departamento');
+        return $this->belongsToMany(Ticket::class, 'ticket_departamentos', 'id_departamento', 'id_ticket');
     }
 }

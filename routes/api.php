@@ -8,9 +8,12 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UsuarioController;
 use App\Models\Ticket;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\StorageController;
 
 
             Route::post('/login', [LoginController::class, 'login'])->name('login');
+
+            Route::middleware('auth:sanctum')->group(function () {
             Route::get('verificar-usuario-existente/{usuario}', [UsuarioController::class, 'verificarUsuarioExistente']);
             Route::get('getPerfiles',[UsuarioController::class, 'getPerfiles']);
             Route::post('guarda-usuario',[UsuarioController::class, 'GuardaUsuario']);
@@ -28,6 +31,9 @@ use App\Http\Controllers\Auth\LoginController;
 
 
             Route::post('guarda-ticket',[TicketController::class,'GuardaTicket']);
+            Route::post('edita-ticket',[TicketController::class,'editaTicket']);
             Route::get('obtiene-tickets-user/{id_usuario}', [TicketController::class,'GetTicketUser']);
             Route::get('obtiene-tickets-id/{id_ticket}',[TicketController::class,'GetTicketId']);
             Route::get('obtiene-estatus',[TicketController::class,'GetStatus']);
+            Route::get('/storage/{filename}', [StorageController::class, 'getImage']);
+            });

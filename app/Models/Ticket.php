@@ -16,7 +16,7 @@ class Ticket extends Model
         'id_ticket',
         'usr_alta',
         'fecha_alta',
-        'dirigido_a'
+        'ticket_anterior'
     ];
 
     public function archivos()
@@ -39,8 +39,9 @@ class Ticket extends Model
         return $this->belongsTo(Usuario::class, 'usr_alta', 'id_usuario');
     }
 
-    public function departamento()
+    public function departamentos()
     {
-        return $this->belongsTo(Departamentos::class, 'dirigido_a', 'id_departamento');
+        return $this->belongsToMany(Departamentos::class, 'ticket_departamentos', 'id_ticket', 'id_departamento');
     }
+
 }
