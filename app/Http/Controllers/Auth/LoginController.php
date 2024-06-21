@@ -13,7 +13,7 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->only('email', 'password');
-       // dd('Punto de depuración alcanzado');
+        //dd('Punto de depuración alcanzado');
         Log::info('Punto de depuración alcanzado');
         if (Auth::attempt($credentials)) {
             // Autenticación exitosa

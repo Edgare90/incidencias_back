@@ -24,4 +24,9 @@ class TicketComentario extends Model
     {
         return $this->belongsTo(Ticket::class, 'id_ticket');
     }
+
+    public function usuario()
+    {
+        return $this->belongsTo(User::class, 'usr', 'id_usuario');
+    }
 }

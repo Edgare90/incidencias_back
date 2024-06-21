@@ -8,7 +8,10 @@ use App\Models\TicketComentario;
 use App\Models\TicketEstatus;
 use App\Models\TicketDepartamento;
 use App\Models\Estatus;
+use App\Models\Usuario;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\TicketCreatedMail; 
 
 class TicketController extends Controller
 {
@@ -28,7 +31,7 @@ class TicketController extends Controller
         if($nuevoRegistro->save())
         {
             $departamentos = $request->input('dirigidoA');
-            //var_dump($departamentos); // Verifica qué valores se están pasando como departamentos
+            //var_dump($departamentos);
     
             if (!is_array($departamentos)) {
                 $departamentos = [$departamentos];
@@ -49,16 +52,13 @@ class TicketController extends Controller
             
             if ($request->hasFile('files')) {
                 foreach ($request->file('files') as $archivo) {
-                    // Generar un nombre único para el archivo
                     $nombreArchivo = uniqid('archivo_') . '.' . $archivo->getClientOriginalExtension();
         
-                    // Guardar el archivo en la carpeta de almacenamiento
                     $rutaArchivo = $archivo->storeAs('archivos', $nombreArchivo, 'public');
         
-                    // Crear un nuevo registro en la tabla TicketArchivo
                     $ticketArchivo = new TicketArchivo();
-                    $ticketArchivo->id_ticket = $nuevoRegistro->id_ticket; // Asignar el ID del nuevo registro de Ticket
-                    $ticketArchivo->archivo = $nombreArchivo; // Asignar el nombre único del archivo
+                    $ticketArchivo->id_ticket = $nuevoRegistro->id_ticket;
+                    $ticketArchivo->archivo = $nombreArchivo;
                     if (!$ticketArchivo->save()) {
                         return response()->json(['mensaje' => 'Error al guardar archivo']);
                     }
@@ -67,19 +67,34 @@ class TicketController extends Controller
 
             $nuevoComentario = new TicketComentario();
             $nuevoComentario->id_ticket =  $nuevoRegistro->id_ticket;
-            $nuevoComentario->usr =  1;
+            $nuevoComentario->usr =  $request->input('id_usuario');
             $nuevoComentario->comentario= $request->input('comentario');
             $nuevoComentario->fecha_comentario = now();
 
             $nuevoEstatus = new TicketEstatus();
             $nuevoEstatus->id_ticket =  $nuevoRegistro->id_ticket;
             $nuevoEstatus->id_estatus =  1;
-            $nuevoEstatus->usr = 1;
+            $nuevoEstatus->usr = $request->input('id_usuario');
             $nuevoEstatus->fecha = now();
             
 
             if($nuevoComentario->save() && $nuevoEstatus->save())
             {
+                $user = Usuario::find($nuevoRegistro->usr_alta);
+                if (!$user) {
+                    return response()->json(['mensaje' => 'Usuario no encontrado']);
+                }
+                $userEmails = Usuario::whereIn('id_departamento', $departamentos)->pluck('email')->toArray();
+
+                    //https://mailtrap.io/inboxes/2978452/messages/4295568497
+                    if (!empty($userEmails)) {
+                        Mail::to($userEmails)
+                            ->send(new TicketCreatedMail($nuevoRegistro, $user));
+                        return response()->json(['mensaje' => 'Ticket guardado y correos enviados con éxito']);
+                    } else {
+                        return response()->json(['mensaje' => 'Ticket guardado pero no se encontraron usuarios para enviar correos']);
+                    }
+
                 return response()->json(['mensaje' => 'Ticket guardado con éxito']);
             }else
             {
@@ -94,6 +109,7 @@ class TicketController extends Controller
     public function editaTicket(Request $request)
     {
         $idTicket = $request->input('idTicket');
+
         $departamentos = $request->input('dirigidoA');
         $todobien = 1;
         
@@ -118,16 +134,13 @@ class TicketController extends Controller
 
         if ($request->hasFile('files')) {
             foreach ($request->file('files') as $archivo) {
-                // Generar un nombre único para el archivo
                 $nombreArchivo = uniqid('archivo_') . '.' . $archivo->getClientOriginalExtension();
     
-                // Guardar el archivo en la carpeta de almacenamiento
                 $rutaArchivo = $archivo->storeAs('archivos', $nombreArchivo, 'public');
     
-                // Crear un nuevo registro en la tabla TicketArchivo
                 $ticketArchivo = new TicketArchivo();
-                $ticketArchivo->id_ticket = $idTicket; // Asignar el ID del nuevo registro de Ticket
-                $ticketArchivo->archivo = $nombreArchivo; // Asignar el nombre único del archivo
+                $ticketArchivo->id_ticket = $idTicket;
+                $ticketArchivo->archivo = $nombreArchivo;
                 if (!$ticketArchivo->save()) {
                     return response()->json(['mensaje' => 'Error al guardar archivo']);
                 }
@@ -161,7 +174,30 @@ class TicketController extends Controller
 
         if($nuevoComentario->save() && $todobien == 1)
         {
-            return response()->json(['mensaje' => 'Ticket editado con éxito']);
+            $existentesDepartamentos = TicketDepartamento::where('id_ticket', $idTicket)->pluck('id_departamento')->toArray();
+            $departamentos = array_unique(array_merge($existentesDepartamentos, $departamentos));
+            $userEmails = Usuario::whereIn('id_departamento', $departamentos)->pluck('email')->toArray();
+
+            if ($nuevoComentario->save() && $todobien == 1) {
+                
+                $tickets = Ticket::where('id_ticket', $idTicket)
+                ->with(['archivos', 'comentarios', 'estatus', 'usuario', 'departamentos'])
+                ->first();
+
+                $user = Usuario::find($usuario);
+                if (!$user) {
+                    return response()->json(['mensaje' => 'Usuario no encontrado']);
+                }
+
+                if ($tickets && $user) {
+                    Mail::to($userEmails)->send(new TicketCreatedMail($tickets,  $user, 'updated'));
+                    return response()->json(['mensaje' => 'Ticket editado con éxito y correos enviados']);
+                } else {
+                    return response()->json(['mensaje' => 'Error al encontrar el ticket especificado']);
+                }
+            } else {
+                return response()->json(['mensaje' => 'Error al editar estatus o comentario']);
+            }
         }else
         {
             return response()->json(['mensaje' => 'Error al editar estatus o comentario']);
@@ -199,7 +235,7 @@ class TicketController extends Controller
     public function GetTicketId($id_ticket)
     {
         $tickets = Ticket::where('id_ticket', $id_ticket)
-        ->with(['archivos', 'comentarios', 'estatus', 'estatus.estatusInfo', 'usuario', 'departamentos'])
+        ->with(['archivos', 'comentarios.usuario', 'estatus', 'estatus.estatusInfo', 'usuario', 'departamentos'])
         ->get();
 
         if ($tickets->isEmpty()) {

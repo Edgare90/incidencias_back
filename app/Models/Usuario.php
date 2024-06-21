@@ -42,6 +42,12 @@ class Usuario extends Model
 
     public function Departamento()
     {
-        return $this->hasOne(Departamentos::class, 'id_departamento');
+        //return $this->hasOne(Departamentos::class, 'id_departamento');
+        return $this->belongsTo(Departamentos::class, 'id_departamento');
+    }
+
+    public function comentarios()
+    {
+        return $this->hasMany(TicketComentario::class, 'usr', 'id_usuario');
     }
 }
