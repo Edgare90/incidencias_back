@@ -33,6 +33,7 @@ use App\Http\Controllers\StorageController;
             Route::post('guarda-ticket',[TicketController::class,'GuardaTicket']);
             Route::post('edita-ticket',[TicketController::class,'editaTicket']);
             Route::get('obtiene-tickets-user/{id_usuario}', [TicketController::class,'GetTicketUser']);
+            Route::get('obtiene-tickets-depto/{id_depto}', [TicketController::class,'GetTicketDepto']);
             Route::get('obtiene-tickets-id/{id_ticket}',[TicketController::class,'GetTicketId']);
             Route::get('obtiene-estatus',[TicketController::class,'GetStatus']);
             Route::get('/storage/{filename}', [StorageController::class, 'getImage']);

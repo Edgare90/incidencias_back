@@ -219,6 +219,15 @@ class TicketController extends Controller
         return $tickets;
     }
 
+    public function GetTicketDepto($id_depto)
+    {
+        $tickets = Ticket::whereHas('departamentos', function ($query) use ($id_depto) {
+            $query->where('ticket_departamentos.id_departamento', '=', $id_depto);
+        })->with(['usuario', 'departamentos', 'comentarios', 'estatus'])->get();
+    
+        return response()->json($tickets);
+    }
+
     public function GetStatus()
     {
         $estatus = Estatus::all();
